@@ -1,0 +1,32 @@
+{
+  "name": "npm-bootstrap",
+  "version": "1.0.0",
+  "description": "Bootstraps an npm module by making a package.json, initializing a git repo, and optionally creating a repo on GitHub.",
+  "main": "bin/index.js",
+  "keywords": [
+    "bootstrap",
+    "init",
+    "npm",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "babel --no-comments --watch -d bin src",
+    "prebuild": "eslint --env node,es6 src/*.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "npm-bootstrap": "bin/index.js"
+  },
+  "prefersGlobal": true,
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel": "^5.8.21",
+    "eslint": "^1.2.1"
+  },
+  "dependencies": {
+    "github": "^0.2.4",
+    "inquirer": "^0.9.0",
+    "promisify-node": "^0.2.1"
+  }
+}
