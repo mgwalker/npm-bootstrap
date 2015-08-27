@@ -9,6 +9,14 @@
     "npm",
     "package.json"
   ],
+  "bugs": {
+    "url": "https://github.com/mgwalker/npm-bootstrap/issues",
+    "email": "isolated-task-queue@darkcooger.net"
+  },
+  "repository": {
+    "type": "git",
+    "url": "mgwalker/npm-bootstrap"
+  },
   "scripts": {
     "build": "babel --no-comments --watch -d bin src",
     "prebuild": "eslint --env node,es6 src/*.js",
