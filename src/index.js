@@ -117,7 +117,7 @@ inq.prompt([{
 		license: answers.license
 	};
 
-	fs.writeFileSync("_package.json", JSON.stringify(pkgJson, null, "  "));	
+	fs.writeFileSync("package.json", JSON.stringify(pkgJson, null, "  "));
 	fs.writeFileSync("LICENSE.md", licenseText(answers.license, author));
 	fs.writeFileSync("README.md", `# ${answers.name}`);
 	
