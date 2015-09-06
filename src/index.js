@@ -1,5 +1,6 @@
 #! /usr/bin/env node
 
+const Promise = require("promise");
 const promisify = require("promisify-node");
 const exec = promisify(require("child_process").exec);
 const path = require("path");
@@ -117,55 +118,69 @@ inq.prompt([{
 		license: answers.license
 	};
 
-	fs.writeFileSync("package.json", JSON.stringify(pkgJson, null, "  "));
-	fs.writeFileSync("LICENSE.md", licenseText(answers.license, author));
-	fs.writeFileSync("README.md", `# ${answers.name}`);
-	
-	if(answers.useGit) {
-		fs.writeFileSync(".gitignore", "node_modules");
-		exec("git init")
-			.then(function() {
-				return exec("git add .");
-			})
-			.then(function() {
-				return exec("git commit -m 'Initial commit'");
-			})
-			.then(function() {
-				if(answers.useGithub) {
-					return true;
-				} else {
-					throw null;
-				}
-			})
-			.then(function() {
-				const github = new GitHub({ version: "3.0.0" });
-				github.authenticate({
-					type: "basic",
-					username: answers.ghUsername,
-					password: answers.ghPassword
-				});
-				
-				const setGitOriginAndPush = function setGitOriginAndPush(url) {
-					exec(`git remote add origin ${url}`)
-						.then(function() {
-							exec(`git push -u origin master`);
-						});
-				};
-				
-				github.repos.get({ user: answers.ghUsername, repo: answers.repoName }, function(err, repo) {
-					if(!repo) {
-						github.repos.create({
-							name: answers.repoName,
-							description: answers.description
-						}, function(err, repo) {
-							setGitOriginAndPush(repo.ssh_url);
-						});
-					} else if(repo.created_at == repo.pushed_at) {
-						setGitOriginAndPush(repo.ssh_url);
+	new Promise(function(resolve, reject) {
+		if(answers.useGit) {
+			fs.writeFileSync(".gitignore", "node_modules");
+			exec("git init")
+				.then(function() {
+					if(answers.useGithub) {
+						return true;
 					} else {
-						console.log(`You already have an active GitHub repo named ${answers.repoName}.`);
+						throw null;
 					}
 				})
-			});
-	}
+				.then(function() {
+					const github = new GitHub({ version: "3.0.0" });
+					github.authenticate({
+						type: "basic",
+						username: answers.ghUsername,
+						password: answers.ghPassword
+					});
+					
+					github.repos.get({ user: answers.ghUsername, repo: answers.repoName }, function(err, repo) {
+						if(!repo) {
+							github.repos.create({
+								name: answers.repoName,
+								description: answers.description
+							}, function(err, repo) {
+								pkgJson.repository = {
+									type: "git",
+									url: `${answers.ghUsername}/${answers.repoName}`
+								};
+								resolve(repo.ssh_url);
+							});
+						} else if(repo.created_at == repo.pushed_at) {
+							resolve(repo.ssh_url);
+						} else {
+							console.log(`You already have an active GitHub repo named ${answers.repoName}.`);
+							resolve();
+						}
+					})
+				});
+		} else {
+			resolve();
+		}
+	}).then(function(gitRepoUrl) {
+		fs.writeFileSync("package.json", JSON.stringify(pkgJson, null, "  "));	
+		fs.writeFileSync("LICENSE.md", licenseText(answers.license, author));
+		fs.writeFileSync("README.md", `# ${answers.name}`);
+		
+		if(gitRepoUrl) {
+			exec("git add .")
+				.then(() => {
+					return exec(`git commit -m "Initial commit"`);
+				})
+				.then(() => {
+					return exec(`git remote add origin ${gitRepoUrl}`);
+				})
+				.then(() => {
+					return exec(`git push -u origin master`);
+				})
+				.then(() => {
+					
+				});
+		}
+	});
+	
+
 });
