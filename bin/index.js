@@ -114,6 +114,8 @@ inq.prompt([{
 		return a.useGithub;
 	}
 }], function (answers) {
+	var pace = require("pace")(answers.useGit ? answers.useGithub ? 8 : 5 : 1);
+
 	var author = answers.authorName;
 	if (answers.authorEmail) {
 		author += " <" + answers.authorEmail + ">";
@@ -129,10 +131,12 @@ inq.prompt([{
 		license: answers.license
 	};
 
-	new Promise(function (resolve, reject) {
+	new Promise(function (resolve) {
 		if (answers.useGit) {
 			fs.writeFileSync(".gitignore", "node_modules");
+			pace.op();
 			exec("git init").then(function () {
+				pace.op();
 				if (answers.useGithub) {
 					return true;
 				} else {
@@ -152,6 +156,7 @@ inq.prompt([{
 							name: answers.repoName,
 							description: answers.description
 						}, function (err, repo) {
+							pace.op();
 							pkgJson.repository = {
 								type: "git",
 								url: answers.ghUsername + "/" + answers.repoName
@@ -159,29 +164,45 @@ inq.prompt([{
 							resolve(repo.ssh_url);
 						});
 					} else if (repo.created_at == repo.pushed_at) {
+						pace.op();
 						resolve(repo.ssh_url);
 					} else {
-						console.log("You already have an active GitHub repo named " + answers.repoName + ".");
+						pace.op();
+
 						resolve();
 					}
 				});
+			})["catch"](function () {
+				resolve();
 			});
 		} else {
 			resolve();
 		}
 	}).then(function (gitRepoUrl) {
+		pkgJson.blah = "blah";
+		licenseText(answers.license, author);
 		fs.writeFileSync("package.json", JSON.stringify(pkgJson, null, "  "));
 		fs.writeFileSync("LICENSE.md", licenseText(answers.license, author));
 		fs.writeFileSync("README.md", "# " + answers.name);
+		pace.op();
 
-		if (gitRepoUrl) {
+		if (answers.useGit) {
 			exec("git add .").then(function () {
+				pace.op();
 				return exec("git commit -m \"Initial commit\"");
 			}).then(function () {
-				return exec("git remote add origin " + gitRepoUrl);
+				pace.op();
+				if (gitRepoUrl) {
+					return exec("git remote add origin " + gitRepoUrl);
+				} else {
+					throw null;
+				}
 			}).then(function () {
+				pace.op();
 				return exec("git push -u origin master");
-			}).then(function () {});
+			}).then(function () {
+				pace.op();
+			});
 		}
 	});
 });

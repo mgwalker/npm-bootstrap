@@ -85,13 +85,13 @@ inq.prompt([{
 	name: "useGithub",
 	message: "Use GitHub?",
 	default: true,
-	when: a => a.useGit,
+	when: a => a.useGit
 }, {
 	type: "input",
 	name: "repoName",
 	message: "Repo name:",
 	default: moduleName,
-	when: a => a.useGithub,
+	when: a => a.useGithub
 }, {
 	type: "input",
 	name: "ghUsername",
@@ -103,6 +103,8 @@ inq.prompt([{
 	message: "GitHub password:",
 	when: a => a.useGithub
 }], function(answers) {
+	const pace = require("pace")(answers.useGit ? (answers.useGithub ? 8 : 5) : 1);
+
 	let author = answers.authorName;
 	if(answers.authorEmail) {
 		author += ` <${answers.authorEmail}>`;
@@ -118,18 +120,20 @@ inq.prompt([{
 		license: answers.license
 	};
 
-	new Promise(function(resolve, reject) {
+	new Promise(function(resolve) {
 		if(answers.useGit) {
 			fs.writeFileSync(".gitignore", "node_modules");
+			pace.op();
 			exec("git init")
-				.then(function() {
+				.then(() => {
+					pace.op();
 					if(answers.useGithub) {
 						return true;
 					} else {
 						throw null;
 					}
 				})
-				.then(function() {
+				.then(() => {
 					const github = new GitHub({ version: "3.0.0" });
 					github.authenticate({
 						type: "basic",
@@ -143,6 +147,7 @@ inq.prompt([{
 								name: answers.repoName,
 								description: answers.description
 							}, function(err, repo) {
+								pace.op();
 								pkgJson.repository = {
 									type: "git",
 									url: `${answers.ghUsername}/${answers.repoName}`
@@ -150,34 +155,48 @@ inq.prompt([{
 								resolve(repo.ssh_url);
 							});
 						} else if(repo.created_at == repo.pushed_at) {
+							pace.op();
 							resolve(repo.ssh_url);
 						} else {
-							console.log(`You already have an active GitHub repo named ${answers.repoName}.`);
+							pace.op();
+							//console.log(`You already have an active GitHub repo named ${answers.repoName}.`);
 							resolve();
 						}
-					})
+					});
+				}).catch(() => {
+					resolve();
 				});
 		} else {
 			resolve();
 		}
 	}).then(function(gitRepoUrl) {
+		pkgJson.blah = "blah";
+		licenseText(answers.license, author);
 		fs.writeFileSync("package.json", JSON.stringify(pkgJson, null, "  "));	
 		fs.writeFileSync("LICENSE.md", licenseText(answers.license, author));
 		fs.writeFileSync("README.md", `# ${answers.name}`);
+		pace.op();
 		
-		if(gitRepoUrl) {
+		if(answers.useGit) {
 			exec("git add .")
 				.then(() => {
+					pace.op();
 					return exec(`git commit -m "Initial commit"`);
 				})
 				.then(() => {
-					return exec(`git remote add origin ${gitRepoUrl}`);
+					pace.op();
+					if(gitRepoUrl) {
+						return exec(`git remote add origin ${gitRepoUrl}`);
+					} else {
+						throw null;
+					}
 				})
 				.then(() => {
+					pace.op();
 					return exec(`git push -u origin master`);
 				})
 				.then(() => {
-					
+					pace.op();
 				});
 		}
 	});

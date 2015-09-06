@@ -20,7 +20,7 @@
   "scripts": {
     "build": "babel --no-comments -d bin src",
     "build-watch": "babel --no-comments --watch -d bin src",
-    "prebuild": "eslint --env node,es6 src/*.js",
+    "prebuild": "eslint src/*.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
@@ -36,6 +36,7 @@
   "dependencies": {
     "github": "^0.2.4",
     "inquirer": "^0.9.0",
+    "pace": "0.0.4",
     "promise": "^7.0.4",
     "promisify-node": "^0.2.1"
   }
