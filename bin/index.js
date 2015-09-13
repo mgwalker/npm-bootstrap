@@ -9,6 +9,7 @@ var fs = require("fs");
 var inq = require("inquirer");
 var GitHub = require("github");
 var licenseText = require("./licenseText");
+var pace = require("pace");
 
 var moduleName = path.basename(process.cwd());
 
@@ -32,19 +33,21 @@ inq.prompt([{
 		);
 	},
 	filter: function filter(input) {
-		if (input.substr(-1, 1) == ".") {
-			input = input.substr(0, input.length - 1);
-		}
-		input = input.split(".");
-		while (input.length < 3) {
-			input.push("0");
-		}
-		input = input.map(function (v) {
-			return v == "" ? "0" : v;
-		});
-		input = input.join(".");
+		var filtered = input;
 
-		return input;
+		if (filtered.substr(-1, 1) === ".") {
+			filtered = filtered.substr(0, filtered.length - 1);
+		}
+		filtered = filtered.split(".");
+		while (filtered.length < 3) {
+			filtered.push("0");
+		}
+		filtered = filtered.map(function (v) {
+			return v === "" ? "0" : v;
+		});
+		filtered = filtered.join(".");
+
+		return filtered;
 	}
 }, {
 	type: "input",
@@ -74,8 +77,8 @@ inq.prompt([{
 	name: "keywords",
 	message: "Keywords (comma-separated):",
 	filter: function filter(v) {
-		return v.split(",").map(function (v) {
-			return v.trim();
+		return v.split(",").map(function (k) {
+			return k.trim();
 		});
 	}
 }, {
@@ -114,9 +117,18 @@ inq.prompt([{
 		return a.useGithub;
 	}
 }], function (answers) {
-	var pace = require("pace")(answers.useGit ? answers.useGithub ? 8 : 5 : 1);
+	var steps = 1;
+
+	if (answers.useGit) {
+		steps = 5;
+		if (answers.useGithub) {
+			steps = 8;
+		}
+	}
+	var progress = pace(steps);
 
 	var author = answers.authorName;
+
 	if (answers.authorEmail) {
 		author += " <" + answers.authorEmail + ">";
 	}
@@ -134,41 +146,42 @@ inq.prompt([{
 	new Promise(function (resolve) {
 		if (answers.useGit) {
 			fs.writeFileSync(".gitignore", "node_modules");
-			pace.op();
+			progress.op();
 			exec("git init").then(function () {
-				pace.op();
+				progress.op();
 				if (answers.useGithub) {
 					return true;
-				} else {
-					throw null;
 				}
+				throw new Error();
 			}).then(function () {
 				var github = new GitHub({ version: "3.0.0" });
+
 				github.authenticate({
 					type: "basic",
 					username: answers.ghUsername,
 					password: answers.ghPassword
 				});
 
-				github.repos.get({ user: answers.ghUsername, repo: answers.repoName }, function (err, repo) {
+				github.repos.get({ user: answers.ghUsername, repo: answers.repoName }, function (_, repo) {
 					if (!repo) {
 						github.repos.create({
 							name: answers.repoName,
 							description: answers.description
-						}, function (err, repo) {
-							pace.op();
-							pkgJson.repository = {
-								type: "git",
-								url: answers.ghUsername + "/" + answers.repoName
-							};
-							resolve(repo.ssh_url);
+						}, function (__, createdRepo) {
+							progress.op();
+							if (createdRepo) {
+								pkgJson.repository = {
+									type: "git",
+									url: answers.ghUsername + "/" + answers.repoName
+								};
+							}
+							resolve(createdRepo.ssh_url);
 						});
-					} else if (repo.created_at == repo.pushed_at) {
-						pace.op();
+					} else if (repo.created_at === repo.pushed_at) {
+						progress.op();
 						resolve(repo.ssh_url);
 					} else {
-						pace.op();
-
+						progress.op();
 						resolve();
 					}
 				});
@@ -179,29 +192,27 @@ inq.prompt([{
 			resolve();
 		}
 	}).then(function (gitRepoUrl) {
-		pkgJson.blah = "blah";
 		licenseText(answers.license, author);
 		fs.writeFileSync("package.json", JSON.stringify(pkgJson, null, "  "));
 		fs.writeFileSync("LICENSE.md", licenseText(answers.license, author));
 		fs.writeFileSync("README.md", "# " + answers.name);
-		pace.op();
+		progress.op();
 
 		if (answers.useGit) {
 			exec("git add .").then(function () {
-				pace.op();
+				progress.op();
 				return exec("git commit -m \"Initial commit\"");
 			}).then(function () {
-				pace.op();
+				progress.op();
 				if (gitRepoUrl) {
 					return exec("git remote add origin " + gitRepoUrl);
-				} else {
-					throw null;
 				}
+				throw new Error();
 			}).then(function () {
-				pace.op();
+				progress.op();
 				return exec("git push -u origin master");
 			}).then(function () {
-				pace.op();
+				progress.op();
 			});
 		}
 	});

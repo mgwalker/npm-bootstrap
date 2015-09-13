@@ -110,6 +110,7 @@ For more information, please refer to <http://unlicense.org/>`
 };
 
 module.exports = function(license, author) {
-  const year = (new Date()).getUTCFullYear();
+	const year = (new Date()).getUTCFullYear();
+
 	return `${licenseText[license].replace(/\[year\]/, year).replace(/\[author\]/, author)}\n`;
-}
+};

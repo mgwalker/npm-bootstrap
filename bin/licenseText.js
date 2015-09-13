@@ -10,5 +10,6 @@ var licenseText = {
 
 module.exports = function (license, author) {
   var year = new Date().getUTCFullYear();
+
   return licenseText[license].replace(/\[year\]/, year).replace(/\[author\]/, author) + "\n";
 };

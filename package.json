@@ -20,7 +20,7 @@
   "scripts": {
     "build": "babel --no-comments -d bin src",
     "build-watch": "babel --no-comments --watch -d bin src",
-    "prebuild": "eslint src/*.js",
+    "prebuild": "cooger-style src/*.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
@@ -31,7 +31,7 @@
   "license": "ISC",
   "devDependencies": {
     "babel": "^5.8.21",
-    "eslint": "^1.2.1"
+    "cooger-style": "^1.0.2"
   },
   "dependencies": {
     "github": "^0.2.4",
