@@ -18,7 +18,7 @@
     "url": "mgwalker/npm-bootstrap"
   },
   "scripts": {
-    "build": "babel --no-comments -d bin src",
+    "build": "babel -d bin src",
     "build-watch": "babel --no-comments --watch -d bin src",
     "prebuild": "cooger-style src/*.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -29,15 +29,24 @@
   "prefersGlobal": true,
   "author": "",
   "license": "ISC",
+  "babel": {
+    "presets": [
+      "es2015"
+    ],
+    "comments": false,
+    "compact": "auto"
+  },
   "devDependencies": {
-    "babel": "^5.8.21",
+    "babel": "^6.1.18",
+    "babel-cli": "^6.2.0",
+    "babel-preset-es2015": "^6.1.18",
     "cooger-style": "^1.0.2"
   },
   "dependencies": {
     "github": "^0.2.4",
-    "inquirer": "^0.9.0",
+    "inquirer": "^0.11.0",
     "pace": "0.0.4",
     "promise": "^7.0.4",
-    "promisify-node": "^0.2.1"
+    "promisify-node": "^0.3.0"
   }
 }

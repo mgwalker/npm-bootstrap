@@ -17,7 +17,7 @@ inq.prompt([{
 	type: "input",
 	name: "name",
 	message: "Package name:",
-	"default": moduleName,
+	default: moduleName,
 	validate: function validate(v) {
 		moduleName = v;
 		return (/^[a-z0-9][a-z0-9-_.]{1,213}$/.test(v)
@@ -27,7 +27,7 @@ inq.prompt([{
 	type: "input",
 	name: "version",
 	message: "Version:",
-	"default": "1.0.0",
+	default: "1.0.0",
 	validate: function validate(input) {
 		return (/^([0-9]+\.?){1,3}$/.test(input)
 		);
@@ -66,12 +66,12 @@ inq.prompt([{
 	name: "license",
 	message: "License:",
 	choices: ["ISC", "MIT", "BSD-2-Clause", "BSD-3-Clause", "Public Domain"],
-	"default": "ISC"
+	default: "ISC"
 }, {
 	type: "input",
 	name: "entry",
 	message: "Module entry point:",
-	"default": "main.js"
+	default: "main.js"
 }, {
 	type: "input",
 	name: "keywords",
@@ -85,12 +85,12 @@ inq.prompt([{
 	type: "confirm",
 	name: "useGit",
 	message: "Create a git repo?",
-	"default": true
+	default: true
 }, {
 	type: "confirm",
 	name: "useGithub",
 	message: "Use GitHub?",
-	"default": true,
+	default: true,
 	when: function when(a) {
 		return a.useGit;
 	}
@@ -98,7 +98,7 @@ inq.prompt([{
 	type: "input",
 	name: "repoName",
 	message: "Repo name:",
-	"default": moduleName,
+	default: moduleName,
 	when: function when(a) {
 		return a.useGithub;
 	}
@@ -181,11 +181,13 @@ inq.prompt([{
 						progress.op();
 						resolve(repo.ssh_url);
 					} else {
+						// In this case, the Github repo already exists
+						// and has been pushed to.
 						progress.op();
 						resolve();
 					}
 				});
-			})["catch"](function () {
+			}).catch(function () {
 				resolve();
 			});
 		} else {
