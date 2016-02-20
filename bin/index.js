@@ -65,7 +65,7 @@ inq.prompt([{
 	type: "list",
 	name: "license",
 	message: "License:",
-	choices: ["ISC", "MIT", "BSD-2-Clause", "BSD-3-Clause", "Public Domain"],
+	choices: ["ISC", "MIT", "BSD-2-Clause", "BSD-3-Clause", "CC0-1.0"],
 	default: "ISC"
 }, {
 	type: "input",

@@ -63,7 +63,7 @@ inq.prompt([ {
 		"MIT",
 		"BSD-2-Clause",
 		"BSD-3-Clause",
-		"Public Domain"
+		"CC0-1.0"
 	],
 	default: "ISC"
 }, {
